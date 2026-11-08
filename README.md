@@ -1,134 +1,213 @@
 VAULTGUARD
 Secure File Storage and Intelligent Threat Protection System
 
-Tagline: Secure Your Files. Protect Your Digital Identity.
+Secure Your Files. Protect Your Digital Identity.
 
 1. Project Overview
 
 VAULTGUARD is a secure file storage and intelligent threat protection web application developed using Python and Flask.
 
-It provides secure file encryption, file integrity verification, version management, secure recovery and account risk monitoring.
+The system is designed to protect confidential files through encryption, verify file integrity, manage file versions, support secure file recovery and monitor suspicious account activities.
 
 2. Problem Statement
 
-Traditional file storage systems can expose sensitive information to unauthorized access, data tampering and accidental data loss.
+Traditional file storage systems may expose sensitive information to unauthorized access, data tampering and accidental data loss.
 
-VAULTGUARD addresses these challenges through encryption, authentication, file integrity checking and secure recovery mechanisms.
+VAULTGUARD aims to address these challenges through secure authentication, encrypted file storage, integrity verification, access control and recovery mechanisms.
 
-3. Objectives
-Protect confidential files through encryption.
+3. Project Objectives
+Protect confidential files using encryption.
 Prevent unauthorized file access.
-Detect file tampering.
+Detect unauthorized file modifications.
 Maintain file version history.
 Provide secure file recovery.
 Monitor suspicious account activities.
+Improve overall data security.
 4. Technologies Used
-
-Backend:
-
+Backend
 Python
 Flask
 Flask-SQLAlchemy
 Flask-Login
-
-Frontend:
-
-HTML
-CSS
+Frontend
+HTML5
+CSS3
 Bootstrap 5
 JavaScript
 Chart.js
-
-Database:
-
+Database
 SQLite
-
-Security:
-
+Security Technologies
 AES-256-GCM
 SHA-256
 Argon2id
-CSRF protection
 
-5. Main Features
-User registration and login.
-Secure file upload.
-AES-256-GCM file encryption.
-Secure file download and decryption.
-SHA-256 integrity verification.
-File version management.
-Secure file recovery.
-Dynamic account risk assessment.
-Security incident monitoring.
-Administrator dashboard.
+Include only technologies that are actually implemented in your application.
 
+5. Key Features
+User Registration and Authentication
+Secure Login and Logout
+Encrypted File Upload
+AES-256-GCM File Encryption
+Secure File Download and Decryption
+SHA-256 File Integrity Verification
+File Version Management
+Secure File Recovery
+Account Risk Assessment
+Security Incident Monitoring
+Administrator Dashboard
+Role-Based Access Control
 6. Project Structure
 text
 VaultGuard/
+│
 ├── app.py
 ├── config.py
 ├── models.py
 ├── encryption.py
 ├── security.py
 ├── recovery.py
+│
 ├── requirements.txt
 ├── README.md
 ├── LICENSE
 ├── .env.example
 ├── .gitignore
+│
 ├── storage/
+│
 ├── templates/
+│
 ├── static/
-└── tests/
+│   ├── css/
+│   └── js/
+│
+├── tests/
+│
+└── screenshots/
 
-7. Installation
 
-Clone the repository:
+The structure above is illustrative. Your actual repository may contain additional files or different folders.
 
+7. Installation and Setup
+Prerequisites
+Python 3.10 or later
+pip
+Git (optional if downloading the project ZIP)
+Step 1: Clone the Repository
 bash
 git clone https://github.com/YOUR_USERNAME/VaultGuard.git
 cd VaultGuard
 
 
-Create a virtual environment:
+Replace YOUR_USERNAME with your GitHub username.
 
+Alternatively, download the repository as a ZIP file from GitHub.
+
+Step 2: Create a Virtual Environment
 bash
 python -m venv venv
 
+Step 3: Activate the Virtual Environment
 
-Install the dependencies:
+Windows:
 
+powershell
+venv\Scripts\activate
+
+
+Linux / macOS:
+
+bash
+source venv/bin/activate
+
+Step 4: Install Dependencies
 bash
 pip install -r requirements.txt
 
+Step 5: Configure Environment Variables
 
-Configure the required environment variables using .env.example. Generate and securely configure your own application secrets and encryption key.
+Use .env.example as a reference to configure your local .env file.
 
-8. Run the Application
+Generate your own application secret and encryption key.
+
+Never upload actual secrets or encryption keys to GitHub.
+
+Step 6: Run the Application
 bash
 python app.py
 
 
-Open the local application URL displayed in the terminal.
+Open the local URL displayed in your terminal.
 
-9. Run Automated Tests
+8. Application Usage
+Register a new user account.
+Log in to VAULTGUARD.
+Navigate to the file upload section.
+Select a document to upload.
+Encrypt and securely store the document.
+Verify file integrity.
+Download and decrypt stored documents.
+Manage file versions and recovery.
+Monitor account security activities.
+9. Testing
+
+Run the automated tests using:
+
 bash
 pytest -v
 
-10. Security
 
-VAULTGUARD uses authenticated encryption, password hashing, server-side access control and file integrity verification.
+Tests should verify the implemented authentication, encryption, integrity verification, recovery and security functionality.
 
-Encryption keys and application secrets must be configured securely and must never be committed to the public repository.
+10. Security Considerations
 
-11. Demonstration
+VAULTGUARD is designed with security-focused mechanisms, including:
 
-A project demonstration video is provided separately.
+Authenticated encryption.
+Password hashing.
+Server-side authorization.
+File integrity verification.
+Secure handling of application secrets.
+Protection against unauthorized file access.
 
-12. License
+Encryption keys must be securely stored and backed up. Never commit private keys, user databases or confidential documents to a public repository.
 
-This project is licensed under the MIT License.
+11. Screenshots
 
-13. Academic Project
+Application screenshots can be added to the screenshots/ directory.
 
-Developed as part of the GitHub Tool Project academic assignment.
+Examples include:
+
+Login Page
+Registration Page
+User Dashboard
+Secure File Upload
+Encryption Status
+Integrity Verification
+File Version History
+Security Monitoring
+Administrator Dashboard
+12. Project Demonstration
+
+Demo Video: Add your Google Drive demonstration video link here.
+
+13. License
+
+This project is distributed under the terms specified in the LICENSE file.
+
+Copyright belongs to the respective copyright holder.
+
+14. Academic Project
+
+Project Title: VAULTGUARD – Secure File Storage and Intelligent Threat Protection System
+
+Project Type: College Academic Project
+
+Primary Language: Python
+
+Framework: Flask
+
+Repository: GitHub
+
+VAULTGUARD – Secure Your Files. Protect Your Digital Identity.
