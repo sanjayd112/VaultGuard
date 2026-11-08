@@ -86,7 +86,7 @@ VaultGuard/
 Clone the repository:
 
 bash
-git clone https://github.com/YOUR_USERNAME/VaultGuard.git
+git clone https://github.com/sanjayd112/VaultGuard.git
 cd VaultGuard
 
 
