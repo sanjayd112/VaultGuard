@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf %}
+{% block title %}Create account{% endblock %}
+{% block auth %}
+<div class="auth-split">
+  {% include "_hero.html" %}
+  <section class="auth-card">
+    {% if recovery_code %}
+    <div class="success-ring"><i class="bi bi-check-lg"></i></div>
+    <h2>Welcome, {{ new_user }}</h2>
+    <p class="muted">Your account is ready. Save this recovery code now. It is shown only once and is required to reactivate your account if it is ever restricted.</p>
+    <div class="recovery-box" id="recoveryCode">{{ recovery_code }}</div>
+    <button class="btn btn-vg-outline w-100 mb-2" type="button" data-copy="#recoveryCode"><i class="bi bi-clipboard"></i> Copy recovery code</button>
+    <a class="btn btn-vg w-100" href="{{ url_for('login') }}">Continue to sign in</a>
+    {% else %}
+    <h2>Create your vault</h2>
+    <p class="muted">Passwords are hashed with Argon2id. Nothing is stored in plaintext.</p>
+    <form method="post" novalidate>
+      {{ csrf() }}
+      <label class="form-label" for="username">Username</label>
+      <input class="form-control vg-input" id="username" name="username" value="{{ form.username }}" autocomplete="username" required autofocus>
+      <label class="form-label mt-3" for="email">Email</label>
+      <input class="form-control vg-input" id="email" type="email" name="email" value="{{ form.email }}" autocomplete="email" required>
+      <div class="row g-3 mt-0">
+        <div class="col-sm-6"><label class="form-label" for="password">Password</label>
+          <input class="form-control vg-input" id="password" type="password" name="password" autocomplete="new-password" required></div>
+        <div class="col-sm-6"><label class="form-label" for="confirm">Confirm</label>
+          <input class="form-control vg-input" id="confirm" type="password" name="confirm" autocomplete="new-password" required></div>
+      </div>
+      <div class="form-text">At least 10 characters with upper-case, lower-case and a number.</div>
+      <button class="btn btn-vg w-100 mt-4"><i class="bi bi-person-plus"></i> Create account</button>
+    </form>
+    <p class="auth-alt">Already registered? <a href="{{ url_for('login') }}">Sign in</a></p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, stat, incident_badge, risk_badge %}
+{% block title %}Admin console{% endblock %}
+{% block heading %}<h1>Administrator console</h1><span>Server-side authorized · all actions are audited</span>{% endblock %}
+{% block content %}
+<div class="row g-3 stagger">
+  <div class="col-6 col-md-3 col-xl">{{ stat('bi-people-fill','Registered users', stats.users, '', 'blue') }}</div>
+  <div class="col-6 col-md-3 col-xl">{{ stat('bi-files','Total files', stats.files, stats.versions ~ ' versions', 'cyan') }}</div>
+  <div class="col-6 col-md-3 col-xl">{{ stat('bi-hdd-fill','Storage', stats.storage|filesize, 'encrypted', 'blue') }}</div>
+  <div class="col-6 col-md-3 col-xl">{{ stat('bi-lock-fill','Restricted accounts', stats.restricted, stats.high_risk ~ ' high risk', 'red' if stats.restricted else 'green') }}</div>
+  <div class="col-6 col-md-3 col-xl">{{ stat('bi-bug-fill','Integrity failures', stats.integrity_failures, 'tampering events', 'red' if stats.integrity_failures else 'green') }}</div>
+  <div class="col-6 col-md-3 col-xl">{{ stat('bi-journal-text','Incidents logged', stats.incidents, '', 'amber') }}</div>
+</div>
+<div class="row g-3 mt-1">
+  <div class="col-xl-4"><section class="panel h-100"><div class="panel-head"><h3>Accounts by risk level</h3></div><div class="chart-box sm"><canvas id="adminRiskChart"></canvas></div></section></div>
+  <div class="col-xl-4"><section class="panel h-100"><div class="panel-head"><h3>Top incident types</h3></div><div class="chart-box sm"><canvas id="adminEventChart"></canvas></div></section></div>
+  <div class="col-xl-4"><section class="panel h-100"><div class="panel-head"><h3>Platform activity</h3><span class="muted">7 days</span></div><div class="chart-box sm"><canvas id="activityChart"></canvas></div></section></div>
+</div>
+
+<section class="panel mt-3"><div class="panel-head"><h3>User accounts &amp; risk</h3></div>
+  <div class="table-responsive"><table class="table vg-table align-middle">
+  <thead><tr><th>User</th><th>Role</th><th>Files</th><th>Risk</th><th>Status</th><th>Last login</th><th class="text-end">Manage</th></tr></thead><tbody>
+  {% for u in users %}<tr>
+    <td><b>{{ u.username }}</b><div><small class="muted">{{ u.email }}</small></div></td><td>{{ u.role|title }}</td><td>{{ file_counts.get(u.id, 0) }}</td>
+    <td>{{ u.risk_score }} {{ risk_badge(risk_level(u.risk_score)) }}</td>
+    <td>{% if u.status == 'active' %}<span class="vg-badge b-ok">Active</span>{% elif u.status == 'restricted' %}<span class="vg-badge b-critical">Restricted</span>{% else %}<span class="vg-badge b-muted">{{ u.status|title }}</span>{% endif %}
+      {% if u.restricted_until %}<div><small class="muted">until {{ u.restricted_until|dt }}</small></div>{% endif %}</td>
+    <td>{{ u.last_login_at|dt }}</td>
+    <td class="text-end nowrap">
+      {% if u.status == 'restricted' %}
+      <form class="d-inline" method="post" action="{{ url_for('admin_user_action', user_id=u.id, action='unrestrict') }}">{{ csrf() }}<button class="btn btn-sm btn-vg"><i class="bi bi-unlock"></i> Reactivate</button></form>
+      {% elif not u.is_admin %}
+      <form class="d-inline" method="post" action="{{ url_for('admin_user_action', user_id=u.id, action='restrict') }}" data-confirm="Restrict {{ u.username }} and end all their sessions?">{{ csrf() }}<button class="btn btn-sm btn-vg-danger"><i class="bi bi-lock"></i> Restrict</button></form>{% endif %}
+      <form class="d-inline" method="post" action="{{ url_for('admin_user_action', user_id=u.id, action='revoke-sessions') }}">{{ csrf() }}<button class="btn btn-sm btn-vg-outline"><i class="bi bi-box-arrow-right"></i> Revoke sessions</button></form>
+    </td></tr>{% endfor %}
+  </tbody></table></div></section>
+
+<div class="row g-3 mt-1">
+  <div class="col-xl-4"><section class="panel h-100"><div class="panel-head"><h3>Restricted accounts</h3></div>
+    <ul class="timeline">{% for u in restricted %}<li class="tl-critical"><div><b>{{ u.username }}</b><small>{{ u.restriction_reason }}</small></div><time>{{ u.restricted_until|dt if u.restricted_until else 'until verified' }}</time></li>
+    {% else %}<li class="empty-note static"><i class="bi bi-shield-check"></i> No restricted accounts.</li>{% endfor %}</ul></section></div>
+  <div class="col-xl-4"><section class="panel h-100"><div class="panel-head"><h3>Integrity failures</h3></div>
+    <ul class="timeline">{% for i in integrity %}<li class="tl-critical"><div><b>{{ i.user.username if i.user }}</b><small>{{ i.details }}</small></div><time>{{ i.created_at|dt }}</time></li>
+    {% else %}<li class="empty-note static"><i class="bi bi-shield-check"></i> No tampering detected.</li>{% endfor %}</ul></section></div>
+  <div class="col-xl-4"><section class="panel h-100"><div class="panel-head"><h3>Recovery activity</h3></div>
+    <ul class="timeline">{% for i in recoveries %}<li class="tl-{{ i.status }}"><div><b>{{ i.user.username if i.user }} · {{ i.event_type|event_label }}</b><small>{{ i.details }}</small></div><time>{{ i.created_at|dt }}</time></li>
+    {% else %}<li class="empty-note static">No recoveries yet.</li>{% endfor %}</ul></section></div>
+</div>
+
+<section class="panel mt-3"><div class="panel-head"><h3>Latest security incidents</h3><a class="link-sm" href="{{ url_for('incidents') }}">Search all incidents</a></div>
+  <div class="table-responsive"><table class="table vg-table"><thead><tr><th>Time</th><th>User</th><th>Event</th><th>Details</th><th>Status</th></tr></thead><tbody>
+  {% for i in recent %}<tr><td class="nowrap">{{ i.created_at|dt }}</td><td>{{ i.user.username if i.user else 'anonymous' }}</td><td class="nowrap">{{ i.event_type|event_label }}</td><td class="wrap-td">{{ i.details }}</td><td>{{ incident_badge(i.status) }}</td></tr>{% endfor %}
+  </tbody></table></div></section>
+<script type="application/json" id="chart-data">{{ chart_data|tojson }}</script>
+{% endblock %}

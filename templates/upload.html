@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf %}
+{% block title %}Encrypt & Upload{% endblock %}
+{% block heading %}<h1>Encrypt &amp; upload</h1><span>Files are sealed with AES-256-GCM before being written to disk</span>{% endblock %}
+{% block content %}
+<div class="row g-3">
+  <div class="col-xl-8">
+    <section class="panel">
+      <form id="uploadForm" method="post" action="{{ url_for('upload') }}" enctype="multipart/form-data" novalidate>
+        {{ csrf() }}
+        <div class="dropzone" id="dropzone" data-max-mb="{{ config.MAX_UPLOAD_MB }}" data-allowed="{{ allowed|join(',')|lower }}" tabindex="0">
+          <div class="dz-ico"><i class="bi bi-cloud-arrow-up-fill"></i></div>
+          <h3>Drag &amp; drop your file here</h3>
+          <p class="muted">{{ allowed|join(' · ') }} · up to {{ config.MAX_UPLOAD_MB }} MB</p>
+          <button type="button" class="btn btn-vg-outline" id="chooseBtn"><i class="bi bi-folder2-open"></i> Choose file</button>
+          <input type="file" name="file" id="fileInput" hidden accept=".pdf,.docx,.txt,.png,.jpg,.jpeg,.xlsx">
+        </div>
+
+        <div class="file-chip" id="fileChip" hidden>
+          <i class="bi bi-file-earmark-lock2-fill"></i>
+          <div class="grow"><div class="fname" id="fileName"></div><small class="muted"><span id="fileSize"></span> · <span id="fileType"></span></small></div>
+          <button type="button" class="icon-btn" id="clearBtn" aria-label="Remove file"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="alert vg-alert vg-danger mt-3" id="uploadError" hidden></div>
+
+        <div class="mt-3">
+          <label class="form-label" for="targetFile">Upload as a new version of an existing file <span class="muted">(optional)</span></label>
+          <select class="form-select vg-input" id="targetFile" name="target_file_id">
+            <option value="">Store as a new file</option>
+            {% for f in files %}<option value="{{ f.public_id }}" {{ 'selected' if f.public_id == preselect }}>{{ f.original_name }} (currently v{{ f.current_version }})</option>{% endfor %}
+          </select>
+        </div>
+
+        <div class="progress vg-progress mt-4" id="progressWrap" hidden><div class="progress-bar" id="progressBar" role="progressbar" style="width:0%"></div></div>
+        <div class="progress-label" id="progressLabel" hidden></div>
+        <button class="btn btn-vg btn-lg mt-3" id="submitBtn" disabled><i class="bi bi-shield-lock-fill"></i> Encrypt &amp; Upload</button>
+      </form>
+
+      <div class="success-card" id="successCard" hidden>
+        <div class="success-ring"><i class="bi bi-check-lg"></i></div>
+        <h3>Encryption successful</h3>
+        <p class="muted" id="successMsg"></p>
+        <ul class="kv mono-kv">
+          <li><span>File</span><b id="rFile"></b></li><li><span>Version</span><b id="rVer"></b></li>
+          <li><span>Size</span><b id="rSize"></b></li><li><span>Algorithm</span><b>AES-256-GCM</b></li>
+          <li><span>Nonce (96-bit)</span><b id="rNonce"></b></li><li><span>SHA-256</span><b id="rHash" class="break"></b></li>
+          <li><span>Read-back check</span><b id="rInt"></b></li>
+        </ul>
+        <a class="btn btn-vg" href="{{ url_for('files') }}"><i class="bi bi-folder2-open"></i> View in My Files</a>
+        <a class="btn btn-vg-outline" href="{{ url_for('upload') }}">Upload another</a>
+      </div>
+    </section>
+  </div>
+  <div class="col-xl-4">
+    <section class="panel h-100">
+      <div class="panel-head"><h3>What happens to your file</h3></div>
+      <ol class="steps">
+        <li><b>Validate</b><span>Extension, MIME type, size and real file signature are checked.</span></li>
+        <li><b>Encrypt</b><span>A fresh 96-bit nonce is generated and the file is sealed with AES-256-GCM.</span></li>
+        <li><b>Store</b><span>Only ciphertext is written, under a random identifier. The original is never saved.</span></li>
+        <li><b>Verify</b><span>SHA-256 digests are saved and the stored copy is decrypted once to prove it is intact.</span></li>
+      </ol>
+    </section>
+  </div>
+</div>
+{% endblock %}

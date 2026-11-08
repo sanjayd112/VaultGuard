@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% from "_macros.html" import risk_badge, incident_badge %}
+{% block title %}Risk monitor{% endblock %}
+{% block heading %}<h1>Risk monitor</h1><span>Dynamic, server-enforced account protection</span>{% endblock %}
+{% block content %}
+<div class="row g-3">
+  <div class="col-lg-5"><section class="panel h-100 text-center">
+    <div class="panel-head"><h3>Current risk score</h3>{{ risk_badge(level) }}</div>
+    <div class="gauge-box"><canvas id="riskGauge"></canvas><div class="gauge-num"><b>{{ score }}</b><small>/ 100</small></div></div>
+    <p class="muted mb-0">{% if level == 'Low' %}Normal activity. No action needed.{% elif level == 'Medium' %}Elevated activity. More suspicious events will restrict your account.{% else %}High risk. The account is restricted until verification.{% endif %}</p>
+    <div class="risk-meter mt-3" data-score="{{ score }}"><div class="seg low"></div><div class="seg med"></div><div class="seg high"></div><div class="marker"></div></div>
+    <div class="meter-legend"><span>Low 0-{{ config.RISK_LOW_MAX }}</span><span>Medium {{ config.RISK_LOW_MAX + 1 }}-{{ config.RISK_MEDIUM_MAX }}</span><span>High {{ config.RISK_MEDIUM_MAX + 1 }}-100</span></div>
+  </section></div>
+  <div class="col-lg-7"><section class="panel h-100">
+    <div class="panel-head"><h3>Scoring rules</h3><span class="muted">events count for {{ config.RISK_WINDOW_HOURS }} h</span></div>
+    <div class="table-responsive"><table class="table vg-table"><thead><tr><th>Event</th><th>Points</th></tr></thead><tbody>
+      {% for k, p in config.RISK_POINTS.items() %}<tr><td>{{ k.replace('_',' ')|title }}</td><td><b>+{{ p }}</b></td></tr>{% endfor %}
+    </tbody></table></div>
+    <p class="muted small mb-0"><i class="bi bi-lock"></i> At <b>{{ config.RISK_MEDIUM_MAX + 1 }}+</b> the account is restricted for {{ config.RESTRICTION_MINUTES }} minutes, every session is invalidated on the server and identity verification (password + recovery code) reactivates it.</p>
+  </section></div>
+</div>
+<div class="row g-3 mt-1">
+  <div class="col-xl-7"><section class="panel h-100"><div class="panel-head"><h3>Active risk events</h3></div>
+    <div class="table-responsive"><table class="table vg-table"><thead><tr><th>Time</th><th>Event</th><th>Points</th><th>Details</th></tr></thead><tbody>
+    {% for e in events %}<tr><td class="nowrap">{{ e.created_at|dt }}</td><td>{{ e.event_type.replace('_',' ')|title }}</td><td><b>+{{ e.points }}</b></td><td class="wrap-td">{{ e.details }}</td></tr>
+    {% else %}<tr><td colspan="4"><div class="empty-note static"><i class="bi bi-shield-check"></i> No active risk events.</div></td></tr>{% endfor %}
+    </tbody></table></div></section></div>
+  <div class="col-xl-5"><section class="panel h-100"><div class="panel-head"><h3>Restrictions &amp; verifications</h3></div>
+    <ul class="timeline">{% for i in history %}<li class="tl-{{ i.status }}"><div><b>{{ i.event_type|event_label }}</b><small>{{ i.details }}</small></div><time>{{ i.created_at|dt }}</time></li>
+    {% else %}<li class="empty-note static">Your account has never been restricted.</li>{% endfor %}</ul></section></div>
+</div>
+<div class="row g-3 mt-1">
+  <div class="col-xl-6"><section class="panel h-100"><div class="panel-head"><h3>Active sessions</h3></div>
+    <ul class="kv">{% for s in sessions %}<li><span>{{ s.ip_address }} · {{ (s.user_agent or '')[:38] }}</span><b>{{ s.last_seen_at|dt }}{% if s.token == current_token %} <span class="vg-badge b-info">This device</span>{% endif %}</b></li>{% endfor %}</ul></section></div>
+  <div class="col-xl-6"><section class="panel h-100"><div class="panel-head"><h3>Recent sign-in attempts</h3></div>
+    <ul class="kv">{% for a in attempts %}<li><span><i class="dot {{ 'ok' if a.success else 'bad' }}"></i> {{ 'Success' if a.success else 'Failed' }} · {{ a.ip_address }}</span><b>{{ a.created_at|dt }}</b></li>
+    {% else %}<li class="muted">No attempts recorded.</li>{% endfor %}</ul></section></div>
+</div>
+<script type="application/json" id="chart-data">{{ chart_data|tojson }}</script>
+{% endblock %}

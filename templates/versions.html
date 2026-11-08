@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, integrity_badge, file_icon, incident_badge %}
+{% block title %}Version history{% endblock %}
+{% block heading %}<h1>Version history</h1><span>{{ file.original_name }}</span>{% endblock %}
+{% block content %}
+<section class="panel">
+  <div class="panel-head flex-wrap gap-2">
+    <div class="d-flex align-items-center gap-2">{{ file_icon(file.extension) }}<div><div class="fname">{{ file.original_name }}</div><small class="muted">{{ versions|length }} encrypted version(s) · current is v{{ file.current_version }}</small></div></div>
+    <div><a class="btn btn-vg-outline" href="{{ url_for('files') }}"><i class="bi bi-arrow-left"></i> My files</a>
+    <a class="btn btn-vg" href="{{ url_for('upload', file=file.public_id) }}"><i class="bi bi-plus-lg"></i> Upload new version</a></div>
+  </div>
+  <div class="table-responsive"><table class="table vg-table align-middle">
+    <thead><tr><th>Version</th><th>Filename</th><th>Uploaded</th><th>Size</th><th>Integrity</th><th>SHA-256</th><th class="text-end">Actions</th></tr></thead><tbody>
+    {% for v in versions %}<tr class="{{ 'row-current' if v.version_number == file.current_version }}">
+      <td><b>v{{ v.version_number }}</b>{% if v.version_number == file.current_version %} <span class="vg-badge b-info">Current</span>{% endif %}
+        {% if v.restored_from %}<div><small class="muted"><i class="bi bi-arrow-counterclockwise"></i> restored from v{{ v.restored_from }}</small></div>{% endif %}</td>
+      <td>{{ file.original_name }}</td><td>{{ v.created_at|dt }}</td><td>{{ v.size_bytes|filesize }}</td>
+      <td>{{ integrity_badge(v.integrity_status) }}{% if v.last_verified_at %}<div><small class="muted">{{ v.last_verified_at|dt }}</small></div>{% endif %}</td>
+      <td class="mono small" title="{{ v.plaintext_sha256 }}">{{ v.plaintext_sha256[:14] }}…</td>
+      <td class="text-end nowrap">
+        <form class="d-inline" method="post" action="{{ url_for('verify_file', public_id=file.public_id) }}">{{ csrf() }}<input type="hidden" name="version" value="{{ v.version_number }}"><input type="hidden" name="back" value="versions">
+          <button class="btn btn-sm btn-vg-outline"><i class="bi bi-patch-check"></i> Verify</button></form>
+        <a class="btn btn-sm btn-vg-outline" href="{{ url_for('download', public_id=file.public_id, version=v.version_number) }}"><i class="bi bi-download"></i></a>
+        <form class="d-inline" method="post" action="{{ url_for('restore', public_id=file.public_id, number=v.version_number) }}" data-confirm="Restore version {{ v.version_number }}? It will be verified first and saved as a new version.">{{ csrf() }}
+          <button class="btn btn-sm btn-vg" {{ 'disabled' if v.version_number == file.current_version }}><i class="bi bi-arrow-counterclockwise"></i> Restore</button></form>
+      </td></tr>{% endfor %}
+    </tbody></table></div>
+</section>
+<section class="panel mt-3">
+  <div class="panel-head"><h3>Verification &amp; recovery history</h3></div>
+  <ul class="timeline">{% for i in history %}<li class="tl-{{ i.status }}"><div><b>{{ i.event_type|event_label }}</b><small>{{ i.details }}</small></div><time>{{ i.created_at|dt }}</time></li>
+  {% else %}<li class="empty-note static">No verification or recovery events yet. Use Verify to run an integrity check.</li>{% endfor %}</ul>
+</section>
+{% endblock %}

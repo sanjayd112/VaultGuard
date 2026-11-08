@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf %}
+{% block title %}{{ 'Verify identity' if verify else 'Sign in' }}{% endblock %}
+{% block auth %}
+<div class="auth-split">
+  {% include "_hero.html" %}
+  <section class="auth-card">
+    {% if verify %}
+    <h2>Verify your identity</h2>
+    <p class="muted">Restricted accounts are reactivated after you confirm both your password and the recovery code you received when you registered.</p>
+    <form method="post" action="{{ url_for('verify_identity') }}" novalidate>
+      {{ csrf() }}
+      <label class="form-label" for="username">Username or email</label>
+      <input class="form-control vg-input" id="username" name="username" autocomplete="username" required autofocus>
+      <label class="form-label mt-3" for="password">Password</label>
+      <input class="form-control vg-input" id="password" type="password" name="password" autocomplete="current-password" required>
+      <label class="form-label mt-3" for="rc">Recovery code</label>
+      <input class="form-control vg-input mono" id="rc" name="recovery_code" placeholder="XXXX-XXXX-XXXX-XXXX" autocomplete="off" required>
+      <button class="btn btn-vg w-100 mt-4"><i class="bi bi-patch-check"></i> Verify &amp; reactivate</button>
+    </form>
+    <p class="auth-alt"><a href="{{ url_for('login') }}">Back to sign in</a></p>
+    {% else %}
+    <h2>Sign in</h2>
+    <p class="muted">Welcome back. Your vault is waiting.</p>
+    <form method="post" action="{{ url_for('login', next=request.args.get('next')) }}" novalidate>
+      {{ csrf() }}
+      <label class="form-label" for="username">Username or email</label>
+      <input class="form-control vg-input" id="username" name="username" autocomplete="username" required autofocus>
+      <label class="form-label mt-3" for="password">Password</label>
+      <input class="form-control vg-input" id="password" type="password" name="password" autocomplete="current-password" required>
+      <button class="btn btn-vg w-100 mt-4"><i class="bi bi-box-arrow-in-right"></i> Sign in</button>
+    </form>
+    <p class="auth-alt">New to VaultGuard? <a href="{{ url_for('register') }}">Create an account</a></p>
+    <p class="auth-alt small"><a href="{{ url_for('verify_identity') }}">Account restricted? Verify your identity</a></p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

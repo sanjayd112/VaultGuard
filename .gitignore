@@ -1,0 +1,26 @@
+# Environment secrets
+.env
+.env.*
+!.env.example
+
+# Python cache
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Virtual environments
+venv/
+.venv/
+
+# Database
+*.db
+*.sqlite3
+instance/
+
+# Encrypted files
+storage/encrypted_files/*
+!storage/encrypted_files/.gitkeep
+
+# Temporary files
+*.log
+.DS_Store

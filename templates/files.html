@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, integrity_badge, file_icon %}
+{% block title %}My Files{% endblock %}
+{% block heading %}<h1>My files</h1><span>Only encrypted data is stored on disk</span>{% endblock %}
+{% block content %}
+<section class="panel">
+  <div class="panel-head flex-wrap gap-2">
+    <form class="search-form" method="get"><i class="bi bi-search"></i><input name="q" value="{{ q }}" placeholder="Search file name" class="form-control vg-input"></form>
+    <a class="btn btn-vg" href="{{ url_for('upload') }}"><i class="bi bi-cloud-arrow-up"></i> Encrypt &amp; upload</a>
+  </div>
+  {% if files %}
+  <div class="table-responsive"><table class="table vg-table align-middle">
+    <thead><tr><th>Document</th><th>Version</th><th>Size</th><th>Last updated</th><th>Integrity</th><th class="text-end">Actions</th></tr></thead><tbody>
+    {% for f in files %}{% set v = f.current %}<tr>
+      <td><div class="d-flex align-items-center gap-2">{{ file_icon(f.extension) }}<div><div class="fname">{{ f.original_name }}</div><small class="muted mono"><i class="bi bi-lock-fill"></i> AES-256-GCM · {{ v.plaintext_sha256[:12] }}…</small></div></div></td>
+      <td>v{{ f.current_version }} <small class="muted">/ {{ f.versions|length }} stored</small></td>
+      <td>{{ v.size_bytes|filesize }}</td><td>{{ f.updated_at|dt }}</td>
+      <td>{{ integrity_badge(v.integrity_status) }}{% if v.last_verified_at %}<div><small class="muted">checked {{ v.last_verified_at|dt }}</small></div>{% endif %}</td>
+      <td class="text-end nowrap">
+        <a class="btn btn-sm btn-vg" href="{{ url_for('download', public_id=f.public_id) }}"><i class="bi bi-download"></i> Download</a>
+        <form class="d-inline" method="post" action="{{ url_for('verify_file', public_id=f.public_id) }}">{{ csrf() }}
+          <button class="btn btn-sm btn-vg-outline"><i class="bi bi-patch-check"></i> Verify Integrity</button></form>
+        <a class="btn btn-sm btn-vg-outline" href="{{ url_for('versions', public_id=f.public_id) }}"><i class="bi bi-clock-history"></i> Versions</a>
+        <a class="btn btn-sm btn-vg-outline" href="{{ url_for('upload', file=f.public_id) }}" title="Upload a new version"><i class="bi bi-plus-lg"></i></a>
+      </td></tr>{% endfor %}
+    </tbody></table></div>
+  {% else %}<div class="empty-note static big"><i class="bi bi-safe2"></i><div>{{ 'No files match your search.' if q else 'Your vault is empty.' }}</div><a class="btn btn-vg mt-2" href="{{ url_for('upload') }}">Encrypt your first file</a></div>{% endif %}
+</section>
+{% endblock %}

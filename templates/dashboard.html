@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% from "_macros.html" import stat, incident_badge, integrity_badge, file_icon, risk_badge %}
+{% block title %}Dashboard{% endblock %}
+{% block heading %}<h1>Security overview</h1><span>Everything below is calculated from your live records</span>{% endblock %}
+{% block content %}
+<div class="row g-3 stagger">
+  <div class="col-6 col-md-4 col-xl-2">{{ stat('bi-files', 'Total files', s.total_files, 'in your vault', 'blue') }}</div>
+  <div class="col-6 col-md-4 col-xl-2">{{ stat('bi-lock-fill', 'Encrypted files', s.encrypted_files, 'incl. all versions', 'cyan') }}</div>
+  <div class="col-6 col-md-4 col-xl-2">{{ stat('bi-hdd-fill', 'Storage used', s.storage_bytes|filesize, 'encrypted size', 'blue') }}</div>
+  <div class="col-6 col-md-4 col-xl-2">{{ stat('bi-speedometer2', 'Risk score', s.risk_score ~ ' / 100', level ~ ' risk', {'Low':'green','Medium':'amber','High':'red'}[level]) }}</div>
+  <div class="col-6 col-md-4 col-xl-2">{{ stat('bi-patch-check-fill', 'Verified files', s.verified, 'current versions', 'green') }}</div>
+  <div class="col-6 col-md-4 col-xl-2">{{ stat('bi-exclamation-triangle-fill', 'Security incidents', s.incidents, 'warnings &amp; critical'|safe, 'amber' if s.incidents else 'green') }}</div>
+</div>
+
+<div class="row g-3 mt-1">
+  <div class="col-xl-8"><section class="panel h-100">
+    <div class="panel-head"><h3>Security activity</h3><span class="muted">last 7 days</span></div>
+    <div class="chart-box"><canvas id="activityChart"></canvas></div></section></div>
+  <div class="col-xl-4"><section class="panel h-100">
+    <div class="panel-head"><h3>Risk distribution</h3>{{ risk_badge(level) }}</div>
+    <div class="chart-box sm"><canvas id="riskChart"></canvas></div>
+    <div class="empty-note" id="riskEmpty" hidden><i class="bi bi-shield-check"></i> No active risk events</div>
+    <div class="risk-meter mt-3" data-score="{{ s.risk_score }}"><div class="seg low"></div><div class="seg med"></div><div class="seg high"></div><div class="marker"></div></div>
+    <div class="meter-legend"><span>Low 0-29</span><span>Medium 30-59</span><span>High 60-100</span></div>
+  </section></div>
+</div>
+
+<div class="row g-3 mt-1">
+  <div class="col-lg-6 col-xl-4"><section class="panel h-100">
+    <div class="panel-head"><h3>Storage by file type</h3><span class="muted">KB, encrypted</span></div>
+    <div class="chart-box sm"><canvas id="storageChart"></canvas></div>
+    <div class="empty-note" id="storageEmpty" hidden><i class="bi bi-cloud-arrow-up"></i> Upload a file to see storage</div></section></div>
+  <div class="col-lg-6 col-xl-4"><section class="panel h-100">
+    <div class="panel-head"><h3>Account security</h3></div>
+    <ul class="kv">
+      <li><span>Status</span><b class="txt-{{ 'ok' if current_user.status == 'active' else 'bad' }}">{{ current_user.status|title }}</b></li>
+      <li><span>Role</span><b>{{ current_user.role|title }}</b></li>
+      <li><span>Last sign-in</span><b>{{ current_user.last_login_at|dt }}</b></li>
+      <li><span>Active sessions</span><b>{{ active_sessions }}</b></li>
+      <li><span>Failed logins (streak)</span><b>{{ current_user.failed_login_count }}</b></li>
+      <li><span>Password hashing</span><b>Argon2id</b></li>
+    </ul>
+    <a class="btn btn-vg-outline btn-sm w-100 mt-2" href="{{ url_for('risk_monitor') }}"><i class="bi bi-activity"></i> Open risk monitor</a></section></div>
+  <div class="col-xl-4"><section class="panel h-100">
+    <div class="panel-head"><h3>File integrity overview</h3></div>
+    {% set total = s.total_files or 1 %}
+    <div class="stack-bar mb-3">
+      <div class="s-ok" style="width: {{ (s.verified / total * 100)|round(1) }}%"></div>
+      <div class="s-bad" style="width: {{ (s.failed / total * 100)|round(1) }}%"></div>
+      <div class="s-mute" style="width: {{ (s.unverified / total * 100)|round(1) }}%"></div>
+    </div>
+    <ul class="kv">
+      <li><span><i class="dot ok"></i> Verified</span><b>{{ s.verified }}</b></li>
+      <li><span><i class="dot bad"></i> Tampered</span><b>{{ s.failed }}</b></li>
+      <li><span><i class="dot mute"></i> Unverified</span><b>{{ s.unverified }}</b></li>
+    </ul>
+    <a class="btn btn-vg-outline btn-sm w-100 mt-2" href="{{ url_for('files') }}"><i class="bi bi-folder2-open"></i> Verify my files</a></section></div>
+</div>
+
+<div class="row g-3 mt-1">
+  <div class="col-xl-7"><section class="panel h-100">
+    <div class="panel-head"><h3>Recent uploads</h3><a href="{{ url_for('upload') }}" class="link-sm">Encrypt a file</a></div>
+    {% if recent_files %}
+    <div class="table-responsive"><table class="table vg-table align-middle"><thead><tr><th>Document</th><th>Ver.</th><th>Size</th><th>Updated</th><th>Integrity</th></tr></thead><tbody>
+    {% for f in recent_files %}<tr>
+      <td><div class="d-flex align-items-center gap-2">{{ file_icon(f.extension) }}<a href="{{ url_for('versions', public_id=f.public_id) }}">{{ f.original_name }}</a></div></td>
+      <td>v{{ f.current_version }}</td><td>{{ f.current.size_bytes|filesize }}</td><td>{{ f.updated_at|dt }}</td><td>{{ integrity_badge(f.current.integrity_status) }}</td></tr>{% endfor %}
+    </tbody></table></div>
+    {% else %}<div class="empty-note static"><i class="bi bi-cloud-arrow-up"></i> No files yet. <a href="{{ url_for('upload') }}">Encrypt your first document</a>.</div>{% endif %}
+  </section></div>
+  <div class="col-xl-5"><section class="panel h-100">
+    <div class="panel-head"><h3>Recent activity</h3><a href="{{ url_for('incidents') }}" class="link-sm">Full history</a></div>
+    <ul class="timeline">
+    {% for i in recent_incidents %}<li class="tl-{{ i.status }}"><div><b>{{ i.event_type|event_label }}</b><small>{{ i.details }}</small></div><time>{{ i.created_at|dt }}</time></li>
+    {% else %}<li class="empty-note static">No activity yet.</li>{% endfor %}
+    </ul></section></div>
+</div>
+
+<section class="panel mt-3">
+  <div class="panel-head"><h3>Recent security incidents</h3><span class="muted">warnings and critical events only</span></div>
+  {% if alerts %}
+  <div class="table-responsive"><table class="table vg-table"><thead><tr><th>Time</th><th>Event</th><th>Details</th><th>Status</th></tr></thead><tbody>
+  {% for i in alerts %}<tr><td class="nowrap">{{ i.created_at|dt }}</td><td>{{ i.event_type|event_label }}</td><td class="wrap-td">{{ i.details }}</td><td>{{ incident_badge(i.status) }}</td></tr>{% endfor %}
+  </tbody></table></div>
+  {% else %}<div class="empty-note static"><i class="bi bi-shield-check"></i> No security incidents. Your account looks clean.</div>{% endif %}
+</section>
+<script type="application/json" id="chart-data">{{ chart_data|tojson }}</script>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% macro csrf() %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endmacro %}
+
+{% macro incident_badge(status) %}
+{% if status == 'critical' %}<span class="vg-badge b-critical"><i class="bi bi-exclamation-octagon-fill"></i> Critical</span>
+{% elif status == 'warning' %}<span class="vg-badge b-warning"><i class="bi bi-exclamation-triangle-fill"></i> Warning</span>
+{% else %}<span class="vg-badge b-ok"><i class="bi bi-check-circle-fill"></i> Secure</span>{% endif %}
+{% endmacro %}
+
+{% macro integrity_badge(status) %}
+{% if status == 'verified' %}<span class="vg-badge b-ok"><i class="bi bi-patch-check-fill"></i> Verified</span>
+{% elif status == 'failed' %}<span class="vg-badge b-critical"><i class="bi bi-x-octagon-fill"></i> Tampered</span>
+{% else %}<span class="vg-badge b-muted"><i class="bi bi-question-circle"></i> Unverified</span>{% endif %}
+{% endmacro %}
+
+{% macro risk_badge(level) %}
+<span class="vg-badge {{ {'Low':'b-ok','Medium':'b-warning','High':'b-critical'}[level] }}"><i class="bi bi-shield-fill"></i> {{ level }} risk</span>
+{% endmacro %}
+
+{% macro file_icon(ext) %}
+<span class="file-ico ext-{{ ext }}"><i class="bi {{ {'pdf':'bi-file-earmark-pdf','docx':'bi-file-earmark-word','xlsx':'bi-file-earmark-excel','txt':'bi-file-earmark-text','png':'bi-file-earmark-image','jpg':'bi-file-earmark-image','jpeg':'bi-file-earmark-image'}.get(ext,'bi-file-earmark') }}"></i></span>
+{% endmacro %}
+
+{% macro stat(icon, label, value, sub='', tone='blue') %}
+<div class="stat-card tone-{{ tone }}">
+  <div class="stat-ico"><i class="bi {{ icon }}"></i></div>
+  <div class="stat-body">
+    <div class="stat-label">{{ label }}</div>
+    <div class="stat-value">{{ value }}</div>
+    {% if sub %}<div class="stat-sub">{{ sub }}</div>{% endif %}
+  </div>
+</div>
+{% endmacro %}
+
+{% macro logo(size=34) %}
+<svg class="vg-logo" width="{{ size }}" height="{{ size }}" viewBox="0 0 48 48" aria-hidden="true">
+  <defs><linearGradient id="lg{{ size }}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#00e5ff"/><stop offset="1" stop-color="#2f6bff"/></linearGradient></defs>
+  <path d="M24 3 6 10v13c0 11 7.6 19.3 18 22 10.4-2.7 18-11 18-22V10L24 3Z" fill="none" stroke="url(#lg{{ size }})" stroke-width="2.6" stroke-linejoin="round"/>
+  <circle cx="24" cy="21" r="5" fill="url(#lg{{ size }})"/><path d="M22 25h4l1.5 10h-7L22 25Z" fill="url(#lg{{ size }})"/>
+</svg>
+{% endmacro %}

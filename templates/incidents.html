@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% from "_macros.html" import incident_badge %}
+{% block title %}Incident history{% endblock %}
+{% block heading %}<h1>Incident history</h1><span>{{ 'All users' if current_user.is_admin else 'Your account' }} · {{ pagination.total }} record(s)</span>{% endblock %}
+{% block content %}
+<section class="panel">
+  <form class="filter-grid" method="get">
+    <div><label class="form-label">Search</label><input class="form-control vg-input" name="q" value="{{ filters.q }}" placeholder="user, IP, details…"></div>
+    <div><label class="form-label">Event type</label><select class="form-select vg-input" name="event_type"><option value="">All events</option>
+      {% for k, label in EVENT_LABELS.items() %}<option value="{{ k }}" {{ 'selected' if filters.event_type == k }}>{{ label }}</option>{% endfor %}</select></div>
+    <div><label class="form-label">Security status</label><select class="form-select vg-input" name="status"><option value="">Any</option>
+      {% for k, l in [('ok','Secure'),('warning','Warning'),('critical','Critical')] %}<option value="{{ k }}" {{ 'selected' if filters.status == k }}>{{ l }}</option>{% endfor %}</select></div>
+    <div><label class="form-label">From</label><input class="form-control vg-input" type="date" name="date_from" value="{{ filters.date_from }}"></div>
+    <div><label class="form-label">To</label><input class="form-control vg-input" type="date" name="date_to" value="{{ filters.date_to }}"></div>
+    <div class="filter-actions"><button class="btn btn-vg"><i class="bi bi-funnel"></i> Filter</button><a class="btn btn-vg-outline" href="{{ url_for('incidents') }}">Reset</a></div>
+  </form>
+  <div class="table-responsive mt-3"><table class="table vg-table align-middle">
+    <thead><tr><th>Timestamp (UTC)</th><th>User</th><th>Event</th><th>Details</th><th>IP</th><th>Status</th></tr></thead><tbody>
+    {% for i in pagination.items %}<tr>
+      <td class="nowrap">{{ i.created_at|dt }}</td>
+      <td>{{ i.user.username if i.user else 'unknown / anonymous' }}</td>
+      <td class="nowrap">{{ i.event_type|event_label }}</td><td class="wrap-td">{{ i.details }}</td>
+      <td class="mono small">{{ i.ip_address }}</td><td>{{ incident_badge(i.status) }}</td></tr>
+    {% else %}<tr><td colspan="6"><div class="empty-note static"><i class="bi bi-search"></i> No incidents match these filters.</div></td></tr>{% endfor %}
+    </tbody></table></div>
+  {% if pagination.pages > 1 %}
+  <nav class="pager">
+    {% if pagination.has_prev %}<a class="btn btn-sm btn-vg-outline" href="{{ url_for('incidents', page=pagination.prev_num, **filters) }}"><i class="bi bi-chevron-left"></i> Newer</a>{% endif %}
+    <span class="muted">Page {{ pagination.page }} of {{ pagination.pages }}</span>
+    {% if pagination.has_next %}<a class="btn btn-sm btn-vg-outline" href="{{ url_for('incidents', page=pagination.next_num, **filters) }}">Older <i class="bi bi-chevron-right"></i></a>{% endif %}
+  </nav>{% endif %}
+</section>
+{% endblock %}

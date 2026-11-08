@@ -1,0 +1,17 @@
+{% from "_macros.html" import logo %}
+<section class="auth-hero">
+  <div class="brand big">{{ logo(52) }}<span>Vault<b>Guard</b></span></div>
+  <h1>Secure Your Files.<br>Protect Your Digital Identity.</h1>
+  <p class="lead-dim">Every file is sealed with AES-256-GCM before it touches the disk. Every read is authenticated. Every anomaly is scored.</p>
+  <div class="vault-visual" aria-hidden="true">
+    <div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div>
+    <div class="core"><i class="bi bi-lock-fill"></i></div>
+    <div class="scan"></div>
+    <code class="hexline h1">9f3a·c1d0·77be·e402</code><code class="hexline h2">AES-256-GCM · 96-bit nonce</code><code class="hexline h3">SHA-256 ✓ tag ✓</code>
+  </div>
+  <ul class="hero-points">
+    <li><i class="bi bi-shield-lock"></i> Authenticated encryption with tamper detection</li>
+    <li><i class="bi bi-clock-history"></i> Versioned history with verified recovery</li>
+    <li><i class="bi bi-activity"></i> Risk-based account protection</li>
+  </ul>
+</section>
